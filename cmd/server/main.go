@@ -132,9 +132,9 @@ func main() {
 	//Обработчик update
 	http.HandleFunc("/update/", metricsHandler(store))
 
-	//Запускаем http сервер на 8081
-	fmt.Println("Сервер запущен на http://localhost:8081")
-	if err := http.ListenAndServe(":8081", nil); err != nil {
+	//Запускаем http сервер на 8080
+	fmt.Println("Сервер запущен на http://localhost:8080")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		fmt.Printf("Server mistake: %v\n", err)
 	}
 }
