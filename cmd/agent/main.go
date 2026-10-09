@@ -80,7 +80,11 @@ func (s *MetricsStore) SendMetrics(serverAddress string) {
 	}
 	s.mu.Unlock()
 
-	client := &http.Client{}
+	client := &http.Client{
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+		},
+	}
 
 	// Send gauge
 	for name, value := range gaugesToSend {
