@@ -127,7 +127,7 @@ func sendRequest(client *http.Client, serverAddress, metricType, metricName, met
 }
 
 func main() {
-	// agents config
+	// Настройки агента
 	pollInterval := 2 * time.Second
 	reportInterval := 10 * time.Second
 	serverAddress := "http://localhost:8080"
