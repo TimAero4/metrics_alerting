@@ -130,7 +130,7 @@ func main() {
 	store := NewMemStorage()
 
 	//Обработчик update
-	//http.HandleFunc("/update/", metricsHandler(store))
+	// old variant http.HandleFunc("/update/", metricsHandler(store))
 	http.HandleFunc("/update/", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
