@@ -134,7 +134,7 @@ func main() {
 
 	store := NewMetricStore()
 
-	fmt.Println()
+	fmt.Printf("Агент запущен. Сбор каждые %v, отправка каждые %v на %s\n", pollInterval, reportInterval, serverAddress)
 
 	// goroutine for metrics
 	go func() {
