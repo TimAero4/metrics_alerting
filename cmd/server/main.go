@@ -84,7 +84,7 @@ func metricsHandler(store Storage) http.HandlerFunc {
 		}
 
 		// Парсим URL: /update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
-		// Разделяем на 5 частей: "", "update", "<ТИП>", "<ИМЯ>", "<ЗНАЧЕНИЕ>"
+		// Разделяем на: "", "update", "<ТИП>", "<ИМЯ>", "<ЗНАЧЕНИЕ>"
 		parts := strings.Split(r.URL.Path, "/")
 
 		if len(parts) != 5 {
