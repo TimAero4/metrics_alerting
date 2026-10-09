@@ -130,7 +130,16 @@ func main() {
 	store := NewMemStorage()
 
 	//Обработчик update
-	http.HandleFunc("/update/", metricsHandler(store))
+	//http.HandleFunc("/update/", metricsHandler(store))
+	http.HandleFunc("/update/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Передаем валидный POST запрос одному обработчику
+		metricsHandler(store).ServeHTTP(w, r)
+	})
 
 	//Запускаем http сервер на 8080
 	fmt.Println("Сервер запущен на http://localhost:8080")
