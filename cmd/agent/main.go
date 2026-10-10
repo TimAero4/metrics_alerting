@@ -144,6 +144,9 @@ func main() {
 		}
 	}()
 
+	// 1 seconds latency
+	time.Sleep(1 * time.Second)
+
 	// sending metrics to server (http)
 	for {
 		store.SendMetrics(serverAddress)
