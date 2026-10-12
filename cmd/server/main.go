@@ -128,7 +128,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Обработчик metricsHandler для update
-	mux.HandleFunc("POST /update/", metricsHandler(store))
+	mux.HandleFunc("POST /update/{rest}", metricsHandler(store))
 
 	//Запускаем http сервер на 8080
 	fmt.Println("Сервер запущен на http://localhost:8080")
