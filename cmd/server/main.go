@@ -77,9 +77,8 @@ func (s *MemStorage) Get(metricType MetricType, metricName string) (string, bool
 
 func metricsHandler(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// В Go 1.22+ роутер "POST /update/" кладет остаток пути в параметр "{rest}"
-		// Это позволяет избежать автоматического 307 редиректа при пустых частях URL
-		rest := r.PathValue("rest") // Получаем строку вида "gauge/name/value"
+
+		rest := r.PathValue("rest")
 
 		// Разделяем остаток на 3 части: тип, имя, значение
 		parts := strings.SplitN(rest, "/", 3)
@@ -107,32 +106,27 @@ func metricsHandler(store Storage) http.HandlerFunc {
 			return
 		}
 
-		// Попытка обновить хранилище. Если формат значения некорректен, возвращаем 400.
+		// Попытка обновить хранилище
 		err := store.Update(metricType, metricName, metricValue)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		// Успех: возвращаем HTTP 200 OK
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}
 }
 
 func main() {
-	// Инициализация хранилища в памяти
 	store := NewMemStorage()
 
-	// Создаем маршрутизатор (mux)
 	mux := http.NewServeMux()
 
-	// Обработчик metricsHandler для update
 	mux.HandleFunc("POST /update/{rest}", metricsHandler(store))
 
-	//Запускаем http сервер на 8080
-	fmt.Println("Сервер запущен на http://localhost:8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	fmt.Printf("Сервер запущен на %s\n", serverAddr)
+	if err := http.ListenAndServe(serverAddr, mux); err != nil {
 		fmt.Printf("Server mistake: %v\n", err)
 	}
 }
