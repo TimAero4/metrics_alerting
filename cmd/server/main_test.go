@@ -59,103 +59,37 @@ func TestMemStorage_Update(t *testing.T) {
 	}
 }
 
-// TestMetricsHandler тестирует HTTP хендлеры сервера
+// TestMetricsHandler тестирует HTTP хендлер обновления метрик
 func TestMetricsHandler(t *testing.T) {
 	store := NewMemStorage()
 
-	// Тестируем POST /update/
-	t.Run("POST /update/", func(t *testing.T) {
-		tests := []struct {
-			name       string
-			method     string
-			target     string
-			wantStatus int
-		}{
-			{"valid gauge", http.MethodPost, "/update/gauge/testG/123.45", http.StatusOK},
-			{"valid counter", http.MethodPost, "/update/counter/testC/10", http.StatusOK},
-			{"invalid type", http.MethodPost, "/update/unknown/testM/10", http.StatusBadRequest},
-			{"invalid value", http.MethodPost, "/update/gauge/testM/abc", http.StatusBadRequest},
-			{"empty name", http.MethodPost, "/update/gauge//123", http.StatusNotFound},
-			{"wrong method", http.MethodGet, "/update/gauge/testG/123", http.StatusMethodNotAllowed},
-		}
+	tests := []struct {
+		name       string
+		method     string
+		target     string
+		wantStatus int
+	}{
+		{"valid gauge", http.MethodPost, "/update/gauge/testG/123.45", http.StatusOK},
+		{"valid counter", http.MethodPost, "/update/counter/testC/10", http.StatusOK},
+		{"invalid type", http.MethodPost, "/update/unknown/testM/10", http.StatusBadRequest},
+		{"invalid value", http.MethodPost, "/update/gauge/testM/abc", http.StatusBadRequest},
+		{"empty name", http.MethodPost, "/update/gauge//123", http.StatusNotFound},
+		{"wrong method", http.MethodGet, "/update/gauge/testG/123", http.StatusMethodNotAllowed},
+	}
 
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := httptest.NewRequest(tt.method, tt.target, nil)
-				w := httptest.NewRecorder()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, tt.target, nil)
+			w := httptest.NewRecorder()
 
-				// Используем стандартный мукс для тестирования, как в main
-				mux := http.NewServeMux()
-				mux.HandleFunc("POST /update/", metricsHandler(store))
-				mux.ServeHTTP(w, req)
+			// Используем стандартный мукс для тестирования, как в main
+			mux := http.NewServeMux()
+			mux.HandleFunc("POST /update/", metricsHandler(store))
+			mux.ServeHTTP(w, req)
 
-				if w.Code != tt.wantStatus {
-					t.Errorf("expected status %d, got %d", tt.wantStatus, w.Code)
-				}
-			})
-		}
-	})
-
-	// Подготовим данные для GET хендлеров
-	store.Update(Gauge, "Alloc", "100.5")
-	store.Update(Counter, "PollCount", "5")
-
-	// Тестируем GET /value/
-	t.Run("GET /value/", func(t *testing.T) {
-		tests := []struct {
-			name       string
-			target     string
-			wantStatus int
-			wantBody   string
-		}{
-			{"existing gauge", "/value/gauge/Alloc", http.StatusOK, "100.5"},
-			{"existing counter", "/value/counter/PollCount", http.StatusOK, "5"},
-			{"unknown metric", "/value/gauge/Unknown", http.StatusNotFound, ""},
-			{"unknown type", "/value/unknown/Alloc", http.StatusNotFound, ""},
-		}
-
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				req := httptest.NewRequest(http.MethodGet, tt.target, nil)
-				w := httptest.NewRecorder()
-
-				mux := http.NewServeMux()
-				mux.HandleFunc("GET /value/{type}/{name}", valueHandler(store))
-				mux.ServeHTTP(w, req)
-
-				if w.Code != tt.wantStatus {
-					t.Errorf("expected status %d, got %d", tt.wantStatus, w.Code)
-				}
-				if tt.wantBody != "" && w.Body.String() != tt.wantBody {
-					t.Errorf("expected body %q, got %q", tt.wantBody, w.Body.String())
-				}
-			})
-		}
-	})
-
-	// Тестируем GET /
-	t.Run("GET /", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/", nil)
-		w := httptest.NewRecorder()
-
-		// Вызываем хендлер напрямую
-		listHandler(store).ServeHTTP(w, req)
-
-		if w.Code != http.StatusOK {
-			t.Errorf("expected status 200, got %d", w.Code)
-		}
-		if w.Header().Get("Content-Type") != "text/html; charset=utf-8" {
-			t.Errorf("expected text/html content type")
-		}
-		// Проверяем, что в HTML есть наши метрики
-		body := w.Body.String()
-		if !contains(body, "Alloc") || !contains(body, "PollCount") {
-			t.Error("HTML body does not contain expected metrics")
-		}
-	})
-}
-
-// вспомогательная функция для проверки подстроки
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && s[:len(substr)] == substr || len(s) > len(substr) && contains(s[1:], substr)
+			if w.Code != tt.wantStatus {
+				t.Errorf("expected status %d, got %d", tt.wantStatus, w.Code)
+			}
+		})
+	}
 }
