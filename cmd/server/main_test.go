@@ -80,12 +80,18 @@ func TestMetricsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(tt.method, tt.target, nil)
+
+			// Для корректной работы r.PathValue("rest") в Go 1.22+
+			// при юнит-тестировании необходимо вручную установить значение пути,
+			// так как httptest.NewRequest не прогоняет запрос через реальный роутер.
+			if len(tt.target) >= len("/update/") {
+				req.SetPathValue("rest", tt.target[len("/update/"):])
+			}
+
 			w := httptest.NewRecorder()
 
-			// Используем стандартный мукс для тестирования, как в main
-			mux := http.NewServeMux()
-			mux.HandleFunc("POST /update/", metricsHandler(store))
-			mux.ServeHTTP(w, req)
+			// Вызываем хендлер напрямую
+			metricsHandler(store).ServeHTTP(w, req)
 
 			if w.Code != tt.wantStatus {
 				t.Errorf("expected status %d, got %d", tt.wantStatus, w.Code)

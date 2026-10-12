@@ -77,20 +77,21 @@ func (s *MemStorage) Get(metricType MetricType, metricName string) (string, bool
 
 func metricsHandler(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Парсим URL: /update/<ТИП_МЕТРИКИ>/<ИМЯ_МЕТРИКИ>/<ЗНАЧЕНИЕ_МЕТРИКИ>
-		// Разделяем на 5 частей: "", "update", "<ТИП>", "<ИМЯ>", "<ЗНАЧЕНИЕ>"
-		parts := strings.Split(r.URL.Path, "/")
+		// В Go 1.22+ роутер "POST /update/" кладет остаток пути в параметр "{rest}"
+		// Это позволяет избежать автоматического 307 редиректа при пустых частях URL
+		rest := r.PathValue("rest") // Получаем строку вида "gauge/name/value"
 
-		if len(parts) != 5 {
-			// Если частей меньше 5, значит отсутствует имя или значение.
-			// По требованию: нет имени метрики -> 404
+		// Разделяем остаток на 3 части: тип, имя, значение
+		parts := strings.SplitN(rest, "/", 3)
+
+		if len(parts) != 3 {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
 		}
 
-		metricTypeStr := parts[2]
-		metricName := parts[3]
-		metricValue := parts[4]
+		metricTypeStr := parts[0]
+		metricName := parts[1]
+		metricValue := parts[2]
 
 		// Требование: запрос без имени метрики возвращает 404
 		if metricName == "" {
