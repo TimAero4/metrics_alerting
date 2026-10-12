@@ -1,3 +1,3 @@
 module github.com/TimAero4/metrics_alerting.git
 
-go 1.23
+go 1.22
