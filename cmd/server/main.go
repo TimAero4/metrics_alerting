@@ -129,7 +129,7 @@ func main() {
 	// Обработчик metricsHandler для update
 	mux.HandleFunc("POST /update/", metricsHandler(store))
 
-	//Запускаем http сервер на 8080
+	//Запускаем http сервер на localhost:8080
 	fmt.Println("Сервер запущен на http://localhost:8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
 		fmt.Printf("Server mistake: %v\n", err)
