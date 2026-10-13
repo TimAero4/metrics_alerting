@@ -77,23 +77,25 @@ func (s *MemStorage) Get(metricType MetricType, metricName string) (string, bool
 
 func metricsHandler(store Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// В Go 1.22+ роутер кладет остаток пути в параметр {rest}
-		// Например, для "/update/counter/test/100" rest будет "counter/test/100"
-		rest := r.PathValue("rest")
+		// 1. Жестко отсекаем любые методы, кроме POST (защита от 403 Forbidden)
+		if r.Method != http.MethodPost {
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
-		// Разделяем остаток на 3 части: тип, имя, значение
-		parts := strings.SplitN(rest, "/", 3)
+		// 2. Парсим URL вручную: /update/<ТИП>/<ИМЯ>/<ЗНАЧЕНИЕ>
+		parts := strings.Split(r.URL.Path, "/")
 
-		if len(parts) != 3 {
+		// При пути /update/gauge/test/100 parts будет: ["", "update", "gauge", "test", "100"] (длина 5)
+		if len(parts) != 5 {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
 		}
 
-		metricTypeStr := parts[0]
-		metricName := parts[1]
-		metricValue := parts[2]
+		metricTypeStr := parts[2]
+		metricName := parts[3]
+		metricValue := parts[4]
 
-		// Требование: запрос без имени метрики возвращает 404
 		if metricName == "" {
 			http.Error(w, "Имя метрики обязательно", http.StatusNotFound)
 			return
@@ -101,13 +103,11 @@ func metricsHandler(store Storage) http.HandlerFunc {
 
 		metricType := MetricType(metricTypeStr)
 
-		// Валидация типа метрики (gauge или counter)
 		if metricType != Gauge && metricType != Counter {
 			http.Error(w, "Некорректный тип метрики", http.StatusBadRequest)
 			return
 		}
 
-		// Попытка обновить хранилище
 		err := store.Update(metricType, metricName, metricValue)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -127,7 +127,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Обработчик metricsHandler для update
-	mux.HandleFunc("POST /update/{rest}", metricsHandler(store))
+	mux.HandleFunc("/update/", metricsHandler(store))
 
 	//Запускаем http сервер на 8080
 	fmt.Printf("Сервер запущен на http://localhost:8080")

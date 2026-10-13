@@ -62,14 +62,6 @@ func TestMetricsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(tt.method, tt.target, nil)
-
-			// Эмулируем работу роутера Go 1.22: извлекаем "rest" из URL
-			// чтобы r.PathValue("rest") сработало внутри хендлера
-			prefix := "/update/"
-			if len(tt.target) >= len(prefix) && tt.target[:len(prefix)] == prefix {
-				req.SetPathValue("rest", tt.target[len(prefix):])
-			}
-
 			w := httptest.NewRecorder()
 
 			// Вызываем хендлер напрямую
