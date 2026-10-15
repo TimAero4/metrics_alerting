@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 
@@ -179,13 +178,8 @@ func main() {
 	r.Get("/value/{type}/{name}", valueHandler(store))
 	r.Get("/", listHandler(store))
 
-	serverAddr := os.Getenv("SERVER_ADDRESS")
-	if serverAddr == "" {
-		serverAddr = ":8080"
-	}
-
-	fmt.Printf("Сервер запущен на %s\n", serverAddr)
-	if err := http.ListenAndServe(serverAddr, r); err != nil {
+	fmt.Printf("Сервер запущен на http://localhost:8080")
+	if err := http.ListenAndServe(":8080", r); err != nil {
 		fmt.Printf("Server mistake: %v\n", err)
 	}
 }
