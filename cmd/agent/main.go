@@ -127,10 +127,11 @@ func sendRequest(client *http.Client, serverAddress, metricType, metricName, met
 }
 
 func main() {
-	// Настройки агента
-	pollInterval := 2 * time.Second
-	reportInterval := 10 * time.Second
-	serverAddress := "http://localhost:8080"
+	// 1. Парсим флаги и окружение
+	ParseFlags()
+	serverAddress := GetServerAddress()
+	pollInterval := GetPollInterval()
+	reportInterval := GetReportInterval()
 
 	store := NewMetricStore()
 

@@ -1,12 +1,52 @@
 package main
 
 import (
+	"flag"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 
 	"github.com/go-chi/chi/v5"
 )
+
+func TestGetServerAddress(t *testing.T) {
+	origArgs := os.Args
+	origEnv := os.Getenv("SERVER_ADDRESS")
+	defer func() {
+		os.Args = origArgs
+		os.Setenv("SERVER_ADDRESS", origEnv)
+	}()
+
+	tests := []struct {
+		name    string
+		args    []string
+		envAddr string
+		want    string
+	}{
+		{"default value", []string{"cmd"}, "", ":8080"},
+		{"flag value", []string{"cmd", "-a=:9090"}, "", ":9090"},
+		{"env value", []string{"cmd"}, ":7070", ":7070"},
+		{"env overrides flag", []string{"cmd", "-a=:9090"}, ":7070", ":7070"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Сбрасываем состояние флагов для каждого теста
+			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
+			addrFlag = flag.String("a", "", "Address of the HTTP server endpoint")
+
+			os.Args = tt.args
+			os.Setenv("SERVER_ADDRESS", tt.envAddr)
+			ParseFlags()
+
+			got := GetServerAddress()
+			if got != tt.want {
+				t.Errorf("GetServerAddress() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestMemStorage_Update(t *testing.T) {
 	store := NewMemStorage()

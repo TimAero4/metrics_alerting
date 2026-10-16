@@ -168,6 +168,10 @@ func listHandler(store Storage) http.HandlerFunc {
 }
 
 func main() {
+	// 1. Парсим флаги и окружения
+	ParseFlags()
+	serverAddr := GetServerAddress()
+
 	store := NewMemStorage()
 
 	// Используем роутер chi
@@ -178,8 +182,8 @@ func main() {
 	r.Get("/value/{type}/{name}", valueHandler(store))
 	r.Get("/", listHandler(store))
 
-	fmt.Printf("Сервер запущен на http://localhost:8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	fmt.Printf("Сервер запущен", serverAddr)
+	if err := http.ListenAndServe(serverAddr, r); err != nil {
 		fmt.Printf("Server mistake: %v\n", err)
 	}
 }
