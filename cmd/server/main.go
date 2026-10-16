@@ -182,7 +182,7 @@ func main() {
 	r.Get("/value/{type}/{name}", valueHandler(store))
 	r.Get("/", listHandler(store))
 
-	fmt.Printf("Сервер запущен", serverAddr)
+	fmt.Printf("Сервер запущен %v\n", serverAddr)
 	if err := http.ListenAndServe(serverAddr, r); err != nil {
 		fmt.Printf("Server mistake: %v\n", err)
 	}
