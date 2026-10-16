@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strings"
 )
 
 var addrFlag = flag.String("a", "", "Address of the HTTP server endpoint")
@@ -13,11 +14,21 @@ func ParseFlags() {
 
 // GetServerAddress применяет приоритет: ENV -> Flag -> Default
 func GetServerAddress() string {
+	addr := ""
 	if envAddr := os.Getenv("SERVER_ADDRESS"); envAddr != "" {
-		return envAddr
+		addr = envAddr
+	} else if *addrFlag != "" {
+		addr = *addrFlag
+	} else {
+		addr = ":8080" // Дефолт для сервера
 	}
-	if *addrFlag != "" {
-		return *addrFlag
+
+	// Автотесты могут передать адрес в формате localhost:port.
+	// http.ListenAndServe требует формат :port или host:port.
+	// Если нет двоеточия, добавляем его в начало.
+	if !strings.Contains(addr, ":") {
+		addr = ":" + addr
 	}
-	return ":8080" // Дефолт для сервера
+
+	return addr
 }

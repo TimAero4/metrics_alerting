@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -18,13 +19,22 @@ func ParseFlags() {
 
 // GetServerAddress применяет приоритет: ENV -> Flag -> Default
 func GetServerAddress() string {
+	addr := ""
 	if envAddr := os.Getenv("SERVER_ADDRESS"); envAddr != "" {
-		return envAddr
+		addr = envAddr
+	} else if *addrFlag != "" {
+		addr = *addrFlag
+	} else {
+		addr = "http://localhost:8080" // Дефолт для агента
 	}
-	if *addrFlag != "" {
-		return *addrFlag
+
+	// Если тесты передают адрес без http:// (например, localhost:8080).
+	// Если протокол не указан, добавляем его принудительно.
+	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
+		addr = "http://" + addr
 	}
-	return "http://localhost:8080" // Дефолт для агента
+
+	return addr
 }
 
 func GetReportInterval() time.Duration {
