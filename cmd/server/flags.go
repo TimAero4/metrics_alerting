@@ -6,14 +6,15 @@ import (
 	"strings"
 )
 
-var addrFlag = flag.String("a", "", "Address of the HTTP server endpoint")
-
-func ParseFlags() {
-	flag.Parse()
+type Config struct {
+	ServerAddress string
 }
 
-// GetServerAddress применяет приоритет: ENV -> Flag -> Default
-func GetServerAddress() string {
+// ParseConfig собирает конфигурацию с учетом приоритета: ENV -> Flag -> Default
+func ParseConfig() Config {
+	addrFlag := flag.String("a", "", "Address of the HTTP server endpoint")
+	flag.Parse()
+
 	addr := ""
 	if envAddr := os.Getenv("SERVER_ADDRESS"); envAddr != "" {
 		addr = envAddr
@@ -25,10 +26,11 @@ func GetServerAddress() string {
 
 	// Автотесты могут передать адрес в формате localhost:port.
 	// http.ListenAndServe требует формат :port или host:port.
-	// Если нет двоеточия, добавляем его в начало.
 	if !strings.Contains(addr, ":") {
 		addr = ":" + addr
 	}
 
-	return addr
+	return Config{
+		ServerAddress: addr,
+	}
 }

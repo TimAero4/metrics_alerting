@@ -3,22 +3,26 @@ package main
 import (
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var (
-	addrFlag           = flag.String("a", "", "Address of the HTTP server endpoint")
-	reportIntervalFlag = flag.Int("r", 10, "Report interval in seconds")
-	pollIntervalFlag   = flag.Int("p", 2, "Poll interval in seconds")
-)
-
-func ParseFlags() {
-	flag.Parse()
+type Config struct {
+	ServerAddress  string
+	ReportInterval time.Duration
+	PollInterval   time.Duration
 }
 
-// GetServerAddress применяет приоритет: ENV -> Flag -> Default
-func GetServerAddress() string {
+// ParseConfig собирает конфигурацию агента
+func ParseConfig() Config {
+	addrFlag := flag.String("a", "", "Address of the HTTP server endpoint")
+	reportIntervalFlag := flag.Int("r", 10, "Report interval in seconds")
+	pollIntervalFlag := flag.Int("p", 2, "Poll interval in seconds")
+
+	flag.Parse()
+
+	// --- Server Address ---
 	addr := ""
 	if envAddr := os.Getenv("SERVER_ADDRESS"); envAddr != "" {
 		addr = envAddr
@@ -28,19 +32,34 @@ func GetServerAddress() string {
 		addr = "http://localhost:8080" // Дефолт для агента
 	}
 
-	// Если тесты передают адрес без http:// (например, localhost:8080).
 	// Если протокол не указан, добавляем его принудительно.
 	if !strings.HasPrefix(addr, "http://") && !strings.HasPrefix(addr, "https://") {
 		addr = "http://" + addr
 	}
 
-	return addr
-}
+	// --- Report Interval ---
+	reportInterval := time.Duration(*reportIntervalFlag) * time.Second
+	if envReport := os.Getenv("REPORT_INTERVAL"); envReport != "" {
+		if val, err := time.ParseDuration(envReport); err == nil {
+			reportInterval = val
+		} else if secs, err := strconv.Atoi(envReport); err == nil {
+			reportInterval = time.Duration(secs) * time.Second
+		}
+	}
 
-func GetReportInterval() time.Duration {
-	return time.Duration(*reportIntervalFlag) * time.Second
-}
+	// --- Poll Interval ---
+	pollInterval := time.Duration(*pollIntervalFlag) * time.Second
+	if envPoll := os.Getenv("POLL_INTERVAL"); envPoll != "" {
+		if val, err := time.ParseDuration(envPoll); err == nil {
+			pollInterval = val
+		} else if secs, err := strconv.Atoi(envPoll); err == nil {
+			pollInterval = time.Duration(secs) * time.Second
+		}
+	}
 
-func GetPollInterval() time.Duration {
-	return time.Duration(*pollIntervalFlag) * time.Second
+	return Config{
+		ServerAddress:  addr,
+		ReportInterval: reportInterval,
+		PollInterval:   pollInterval,
+	}
 }

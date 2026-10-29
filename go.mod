@@ -1,4 +1,4 @@
-module github.com/TimAero4/metrics_alerting.git
+module metrics_alerting
 
 go 1.27
 
