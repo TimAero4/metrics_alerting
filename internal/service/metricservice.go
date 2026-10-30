@@ -2,7 +2,6 @@ package service
 
 import (
 	"metrics_alerting/internal/model"
-	"metrics_alerting/internal/repository"
 )
 
 // Storage interface defined near the consumer
@@ -31,6 +30,3 @@ func (s *MetricService) GetMetric(metricType model.MetricType, name string) (str
 func (s *MetricService) GetAllMetrics() (map[string]float64, map[string]int64) {
 	return s.store.GetAll()
 }
-
-// Compile-time check to ensure MemStorage implements Storage
-var _ Storage = (*repository.MemStorage)(nil)

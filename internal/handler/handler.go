@@ -3,12 +3,18 @@ package handler
 import (
 	"html/template"
 	"metrics_alerting/internal/model"
-	"metrics_alerting/internal/service"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 )
+
+// MetricServiceProvider определяет интерфейс, необходимый хендлеру
+type MetricServiceProvider interface {
+	ProcessUpdate(metricType model.MetricType, name, value string) error
+	GetMetric(metricType model.MetricType, name string) (string, bool)
+	GetAllMetrics() (map[string]float64, map[string]int64)
+}
 
 const htmlTemplate = `
 <html><body>
@@ -22,11 +28,11 @@ const htmlTemplate = `
 `
 
 type Handler struct {
-	svc *service.MetricService
+	svc MetricServiceProvider
 	tpl *template.Template
 }
 
-func NewHandler(svc *service.MetricService) *Handler {
+func NewHandler(svc MetricServiceProvider) *Handler {
 	tpl := template.Must(template.New("metrics").Parse(htmlTemplate))
 	return &Handler{svc: svc, tpl: tpl}
 }
@@ -89,6 +95,7 @@ func (h *Handler) ListHandler() http.HandlerFunc {
 		for k, v := range gauges {
 			gaugeStr[k] = strconv.FormatFloat(v, 'f', -1, 64)
 		}
+
 		counterStr := make(map[string]string)
 		for k, v := range counters {
 			counterStr[k] = strconv.FormatInt(v, 10)

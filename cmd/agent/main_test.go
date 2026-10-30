@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -41,15 +42,18 @@ func TestUpdateRuntimeMetrics(t *testing.T) {
 // TestConcurrentUpdate тестирует потокобезопасность хранилища агента
 func TestConcurrentUpdate(t *testing.T) {
 	store := agent.NewMetricStore()
+	var wg sync.WaitGroup
 
+	// Запустим 100 горутин, одновременно обновляющих метрики
 	for i := 0; i < 100; i++ {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			store.UpdateRuntimeMetrics()
 		}()
 	}
 
-	// Короткая пауза, чтобы горутины успели завершиться (в реальности лучше использовать WaitGroup, но для быстрого теста сойдет)
-	time.Sleep(100 * time.Millisecond)
+	wg.Wait() // Ждем завершения всех горутин
 
 	if val, _ := store.GetCounter("PollCount"); val != 100 {
 		t.Errorf("Expected PollCount to be 100 after concurrent updates, got %d", val)
