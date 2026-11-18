@@ -15,14 +15,22 @@ type AgentConfig struct {
 }
 
 func ParseAgentConfig() AgentConfig {
-	addrFlag := flag.String("a", "", "Address of the HTTP server endpoint")
-	reportIntervalFlag := flag.Int("r", 10, "Report interval in seconds")
-	pollIntervalFlag := flag.Int("p", 2, "Poll interval in seconds")
-	flag.Parse()
+	// Создаем локальный FlagSet вместо использования глобального flag.CommandLine
+	// Это позволяет безопасно вызывать функцию несколько раз в тестах
+	fs := flag.NewFlagSet("agent", flag.ContinueOnError)
+
+	addrFlag := fs.String("a", "", "Address of the HTTP server endpoint")
+	reportIntervalFlag := fs.Int("r", 10, "Report interval in seconds")
+	pollIntervalFlag := fs.Int("p", 2, "Poll interval in seconds")
+
+	// Парсим аргументы командной строки через наш локальный FlagSet
+	// Ошибки игнорируются, чтобы поддержать работу флагов вроде -test.v в тестах Go
+	_ = fs.Parse(os.Args[1:])
 
 	// --- Server Address ---
 	addr := ""
-	if envAddr, ok := os.LookupEnv("SERVER_ADDRESS"); ok {
+	// Исправлено на ADDRESS согласно заданию
+	if envAddr, ok := os.LookupEnv("ADDRESS"); ok {
 		addr = envAddr
 	} else if *addrFlag != "" {
 		addr = *addrFlag

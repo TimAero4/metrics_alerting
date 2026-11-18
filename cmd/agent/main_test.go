@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"sync"
 	"testing"
@@ -77,9 +76,7 @@ func TestParseConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Сбрасываем состояние флагов для каждого теста
-			flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
-			os.Args = tt.args
+			os.Args = tt.args // Просто переопределяем os.Args
 
 			cfg := ParseConfig()
 
